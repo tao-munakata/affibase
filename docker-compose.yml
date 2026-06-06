@@ -73,5 +73,29 @@ services:
       - api
     command: pnpm dev
 
+  member-site:
+    build:
+      context: ./apps/member-site
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:3001
+      PUBLIC_API_URL: http://localhost:3001
+      SITE_URL: http://localhost:4321
+      SITE_SLUG: demo
+      SITE_NAME: 副業診断サイト（デモ）
+      THEME_GENRE: 副業
+      THEME_SLUG: fukugyou-shindan
+      OPERATOR_NAME: 運営者
+    ports:
+      - "4321:4321"
+    volumes:
+      - ./apps/member-site:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    command: pnpm dev
+
 volumes:
   postgres_data:

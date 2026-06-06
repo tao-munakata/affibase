@@ -1,0 +1,132 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const API_URL = import.meta.env.API_URL ?? 'http://localhost:3001'
+const SITE_SLUG = import.meta.env.SITE_SLUG ?? 'demo'
+const SITE_NAME = import.meta.env.SITE_NAME ?? '副業診断サイト'
+const SITE_DESCRIPTION = import.meta.env.SITE_DESCRIPTION ?? 'あなたに最適な副業をAIが診断します'
+const OPERATOR_NAME = import.meta.env.OPERATOR_NAME ?? '運営者'
+const THEME_GENRE = import.meta.env.THEME_GENRE ?? '副業'
+
+// Fetch recommended offers for the homepage
+let offers: Array<{id: string; name: string; description: string; commission: number; genre: string}> = []
+try {
+  const res = await fetch(`${API_URL}/api/v1/offers?genre=${encodeURIComponent(THEME_GENRE)}`)
+  if (res.ok) {
+    const data = await res.json()
+    offers = data.offers?.slice(0, 3) ?? []
+  }
+} catch { /* silently fail in SSG */ }
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': SITE_NAME,
+    'description': SITE_DESCRIPTION,
+    'url': import.meta.env.SITE_URL ?? `https://${SITE_SLUG}.affibase.jp`,
+    'author': {'@type': 'Person', 'name': OPERATOR_NAME},
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    'name': `${SITE_NAME} 診断ツール`,
+    'applicationCategory': 'LifestyleApplication',
+    'operatingSystem': 'Web',
+    'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'JPY'},
+  },
+]
+---
+
+<BaseLayout title={`${SITE_NAME} | ${SITE_DESCRIPTION}`} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
+  <!-- Header -->
+  <header class="border-b border-gray-100 bg-white sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <span class="font-bold text-lg text-sky-700">{SITE_NAME}</span>
+      <a href="/articles" class="text-sm text-gray-500 hover:text-gray-700">記事一覧</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-sky-50 to-sky-100 py-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        あなたに最適な{THEME_GENRE}を<br />AIが無料で診断します
+      </h1>
+      <p class="text-gray-600 mb-8 text-lg">
+        6つの質問に答えるだけで、あなたの状況に合った{THEME_GENRE}サービスをご提案します
+      </p>
+      <a
+        href="/shindan"
+        class="inline-flex items-center gap-2 bg-sky-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-sky-700 active:bg-sky-800 transition-colors shadow-md"
+      >
+        無料で診断する →
+      </a>
+      <p class="text-sm text-gray-400 mt-3">所要時間：約1分</p>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="py-12 px-4 bg-white">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-xl font-bold text-center text-gray-900 mb-8">このサイトでできること</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {[
+          { icon: '🎯', title: 'あなた専用の診断', desc: '年齢・職業・スキル・時間から最適な選択肢を提案' },
+          { icon: '📊', title: 'サービス徹底比較', desc: '評判・単価・承認率を一覧で比較できます' },
+          { icon: '🤖', title: 'AI検索でも見つかる', desc: 'ChatGPT・Perplexityからの流入にも対応済み' },
+        ].map((f) => (
+          <div class="text-center p-6 rounded-xl bg-gray-50">
+            <div class="text-3xl mb-3">{f.icon}</div>
+            <h3 class="font-semibold text-gray-900 mb-2">{f.title}</h3>
+            <p class="text-sm text-gray-500">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Recommended Offers -->
+  {offers.length > 0 && (
+    <section class="py-12 px-4 bg-gray-50">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">おすすめ{THEME_GENRE}サービス TOP3</h2>
+        <div class="space-y-4">
+          {offers.map((offer, i) => (
+            <div class="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+              <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center flex-shrink-0">
+                {i + 1}
+              </div>
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-900">{offer.name}</h3>
+                {offer.description && (
+                  <p class="text-sm text-gray-500 mt-0.5 line-clamp-1">{offer.description}</p>
+                )}
+              </div>
+              {offer.commission && (
+                <span class="text-sm font-medium text-sky-700 flex-shrink-0">
+                  ¥{offer.commission.toLocaleString()}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div class="text-center mt-6">
+          <a href="/shindan" class="inline-flex bg-sky-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-sky-700 transition-colors">
+            診断して自分に合ったサービスを見つける
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-100 py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+      <p class="text-xs text-gray-400 text-center">
+        ※ 本サイトはアフィリエイトプログラムを利用しています。記事内のリンクから商品・サービスに申し込みいただいた場合、当サイトに報酬が発生することがあります。<br />
+        運営: {OPERATOR_NAME} | Powered by AffiBase
+      </p>
+    </div>
+  </footer>
+</BaseLayout>

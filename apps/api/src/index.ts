@@ -10,6 +10,7 @@ import sitesRoutes from './routes/sites'
 import offersRoutes from './routes/offers'
 import diagnosisRoutes from './routes/diagnosis'
 import reportsRoutes from './routes/reports'
+import generateRoutes from './routes/generate'
 
 const app = new Hono()
 
@@ -32,6 +33,7 @@ app.route('/api/v1/sites',     sitesRoutes)
 app.route('/api/v1/offers',    offersRoutes)
 app.route('/api/v1/diagnosis', diagnosisRoutes)
 app.route('/api/v1/reports',   reportsRoutes)
+app.route('/api/v1/generate',  generateRoutes)
 
 // OpenAPI spec endpoint (stub — expand later)
 app.get('/api/v1/openapi.json', (c) => c.json({
