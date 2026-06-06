@@ -1,0 +1,22 @@
+{
+  "name": "affibase",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "docker compose up --build",
+    "dev:platform": "pnpm --filter platform dev",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm --filter '*' build",
+    "lint": "pnpm --filter '*' lint",
+    "typecheck": "pnpm --filter '*' typecheck",
+    "db:migrate": "docker compose exec postgres psql -U affibase -d affibase -f /migrations/001_initial.sql",
+    "db:seed": "docker compose exec postgres psql -U affibase -d affibase -f /migrations/002_seed.sql"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

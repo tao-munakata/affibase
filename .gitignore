@@ -1,0 +1,16 @@
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+.env
+.env.local
+.env.*.local
+dist/
+.next/
+.astro/
+out/
+build/
+*.log
+.DS_Store
+.turbo/
+coverage/
+.cache/

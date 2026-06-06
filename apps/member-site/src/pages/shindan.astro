@@ -1,0 +1,272 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const SITE_NAME = import.meta.env.SITE_NAME ?? '副業診断サイト'
+const THEME_GENRE = import.meta.env.THEME_GENRE ?? '副業'
+const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001'
+const THEME_SLUG = import.meta.env.THEME_SLUG ?? 'fukugyou-shindan'
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  'mainEntity': [
+    { '@type': 'Question', 'name': `${THEME_GENRE}は初心者でもできますか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': `はい。${THEME_GENRE}は未経験からでも始められるサービスが多数あります。まずはこの診断でご自身に合ったサービスを見つけてみましょう。` } },
+    { '@type': 'Question', 'name': `${THEME_GENRE}の月収目安はいくらですか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': '初心者の場合、月1〜5万円が現実的な目標です。スキルや時間によって異なりますが、継続することで収入は伸びていきます。' } },
+  ],
+}]
+---
+
+<BaseLayout
+  title={`${THEME_GENRE}診断 | ${SITE_NAME}`}
+  description={`あなたに最適な${THEME_GENRE}をAIが診断。6つの質問に答えるだけで、スキルや時間に合ったサービスを提案します。`}
+  jsonLd={jsonLd}
+>
+  <header class="border-b border-gray-100 bg-white">
+    <div class="max-w-3xl mx-auto px-4 py-4">
+      <a href="/" class="text-sm text-gray-500 hover:text-gray-700">← トップへ</a>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 py-10" id="app">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">{THEME_GENRE}診断</h1>
+    <p class="text-gray-500 mb-8">6つの質問に答えて、あなたに最適な{THEME_GENRE}を見つけましょう</p>
+
+    <!-- Step indicator -->
+    <div id="stepIndicator" class="flex gap-2 mb-8">
+      {[1,2,3,4,5,6].map((s) => (
+        <div class={`h-2 flex-1 rounded-full step-dot ${s === 1 ? 'bg-sky-500' : 'bg-gray-200'}`} data-step={s} />
+      ))}
+    </div>
+
+    <!-- Questions -->
+    <div id="questions">
+      <!-- Step 1 -->
+      <div class="step-panel" data-step="1">
+        <p class="font-medium text-gray-900 mb-4">Q1. 年齢を教えてください</p>
+        <div class="space-y-2" data-field="age">
+          {[['10s','10代'],['20s','20代'],['30s','30代'],['40s','40代'],['50s_plus','50代以上']].map(([v,l]) => (
+            <label class="choice-btn">
+              <input type="radio" name="age" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-panel hidden" data-step="2">
+        <p class="font-medium text-gray-900 mb-4">Q2. 現在のお仕事は？</p>
+        <div class="space-y-2" data-field="job">
+          {[['office','会社員・公務員'],['service','サービス業・販売'],['engineer','エンジニア・IT'],['creative','クリエイター'],['student','学生'],['other','その他']].map(([v,l]) => (
+            <label class="choice-btn">
+              <input type="radio" name="job" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-panel hidden" data-step="3">
+        <p class="font-medium text-gray-900 mb-4">Q3. {THEME_GENRE}を始める理由は？（複数選択可）</p>
+        <div class="space-y-2" data-field="reason">
+          {[['income','収入を増やしたい'],['skill','スキルを活かしたい'],['freedom','時間・場所を自由にしたい'],['independence','独立・起業を目指している'],['saving','老後・貯蓄のため'],['try','まずは試してみたい']].map(([v,l]) => (
+            <label class="choice-btn choice-check">
+              <input type="checkbox" name="reason" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-panel hidden" data-step="4">
+        <p class="font-medium text-gray-900 mb-4">Q4. 1日に使える時間は？</p>
+        <div class="space-y-2" data-field="time">
+          {[['30m','30分未満'],['1h','1時間程度'],['2h','2〜3時間'],['3h_plus','3時間以上']].map(([v,l]) => (
+            <label class="choice-btn">
+              <input type="radio" name="time" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-panel hidden" data-step="5">
+        <p class="font-medium text-gray-900 mb-4">Q5. 得意なスキルは？（複数選択可）</p>
+        <div class="space-y-2" data-field="skills">
+          {[['writing','文章を書く'],['design','デザイン・画像編集'],['programming','プログラミング'],['sns','SNS運用'],['teaching','教える・コーチング'],['sales','営業・交渉'],['analysis','分析・リサーチ'],['other','特になし']].map(([v,l]) => (
+            <label class="choice-btn choice-check">
+              <input type="checkbox" name="skills" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step-panel hidden" data-step="6">
+        <p class="font-medium text-gray-900 mb-4">Q6. 目標月収は？</p>
+        <div class="space-y-2" data-field="goal">
+          {[['10k','1万円〜（まずは小さく）'],['30k','3万円〜（スキマ収入として）'],['50k','5万円〜（生活費の補填）'],['100k','10万円〜（本格的に稼ぐ）'],['300k_plus','30万円以上（独立・起業レベル）']].map(([v,l]) => (
+            <label class="choice-btn">
+              <input type="radio" name="goal" value={v} class="sr-only" />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between mt-8">
+      <button id="prevBtn" class="hidden px-5 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">← 前へ</button>
+      <button id="nextBtn" disabled class="ml-auto px-6 py-2.5 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        次へ →
+      </button>
+    </div>
+
+    <!-- Result (hidden by default) -->
+    <div id="result" class="hidden mt-6" />
+  </main>
+
+  <style>
+    .choice-btn {
+      @apply flex items-center gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-sky-400 hover:bg-sky-50 transition-colors select-none;
+    }
+    .choice-btn:has(input:checked) {
+      @apply border-sky-500 bg-sky-50 text-sky-800;
+    }
+    .hidden { display: none; }
+  </style>
+
+  <script define:vars={{ API_URL, THEME_SLUG }}>
+    const totalSteps = 6
+    let currentStep = 1
+    const answers = { age: '', job: '', reason: [], time: '', skills: [], goal: '' }
+
+    const panels = document.querySelectorAll('.step-panel')
+    const dots = document.querySelectorAll('.step-dot')
+    const nextBtn = document.getElementById('nextBtn')
+    const prevBtn = document.getElementById('prevBtn')
+    const resultEl = document.getElementById('result')
+    const questionsEl = document.getElementById('questions')
+
+    function updateDots() {
+      dots.forEach((d, i) => {
+        d.classList.toggle('bg-sky-500', i < currentStep)
+        d.classList.toggle('bg-gray-200', i >= currentStep)
+      })
+    }
+
+    function getStepValue(step) {
+      const panel = document.querySelector(`.step-panel[data-step="${step}"]`)
+      if (!panel) return null
+      const radios = panel.querySelectorAll('input[type="radio"]:checked')
+      const checks = panel.querySelectorAll('input[type="checkbox"]:checked')
+      if (radios.length > 0) return radios[0].value
+      if (checks.length > 0) return Array.from(checks).map(c => c.value)
+      return null
+    }
+
+    function validateCurrent() {
+      const val = getStepValue(currentStep)
+      return val !== null && val !== '' && (!Array.isArray(val) || val.length > 0)
+    }
+
+    document.addEventListener('change', (e) => {
+      if (e.target.name) {
+        nextBtn.disabled = !validateCurrent()
+      }
+    })
+
+    nextBtn.addEventListener('click', async () => {
+      const val = getStepValue(currentStep)
+      const fields = ['age', 'job', 'reason', 'time', 'skills', 'goal']
+      answers[fields[currentStep - 1]] = val
+
+      if (currentStep === totalSteps) {
+        // Submit diagnosis
+        nextBtn.disabled = true
+        nextBtn.textContent = '診断中...'
+        try {
+          const res = await fetch(`${API_URL}/api/v1/diagnosis`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ theme_slug: THEME_SLUG, answers }),
+          })
+          const data = await res.json()
+          showResult(data)
+        } catch {
+          resultEl.innerHTML = '<p class="text-red-500">診断の取得に失敗しました。もう一度お試しください。</p>'
+          resultEl.classList.remove('hidden')
+          nextBtn.disabled = false
+          nextBtn.textContent = '診断する'
+        }
+        return
+      }
+
+      panels[currentStep - 1].classList.add('hidden')
+      currentStep++
+      panels[currentStep - 1].classList.remove('hidden')
+      nextBtn.disabled = !validateCurrent()
+      nextBtn.textContent = currentStep === totalSteps ? '診断する' : '次へ →'
+      prevBtn.classList.toggle('hidden', currentStep === 1)
+      updateDots()
+    })
+
+    prevBtn.addEventListener('click', () => {
+      panels[currentStep - 1].classList.add('hidden')
+      currentStep--
+      panels[currentStep - 1].classList.remove('hidden')
+      prevBtn.classList.toggle('hidden', currentStep === 1)
+      nextBtn.textContent = '次へ →'
+      nextBtn.disabled = !validateCurrent()
+      updateDots()
+    })
+
+    function showResult(data) {
+      const { result, offers } = data
+      questionsEl.classList.add('hidden')
+      prevBtn.classList.add('hidden')
+      nextBtn.classList.add('hidden')
+      document.getElementById('stepIndicator').classList.add('hidden')
+
+      const offersHtml = (offers ?? []).slice(0, 3).map((o, i) => `
+        <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center flex-shrink-0">${i+1}</div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-900">${o.name}</p>
+            ${o.description ? `<p class="text-sm text-gray-500 mt-0.5">${o.description}</p>` : ''}
+          </div>
+          ${o.affiliate_url ? `<a href="${o.affiliate_url}?utm_source=affibase&utm_medium=diagnosis&utm_campaign=result" target="_blank" rel="noopener noreferrer sponsored" class="flex-shrink-0 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700">詳しく見る</a>` : ''}
+        </div>
+      `).join('')
+
+      const faqHtml = (result.faq ?? []).map(f => `
+        <div class="border-b border-gray-100 pb-4">
+          <p class="font-medium text-gray-900 mb-1">Q: ${f.q}</p>
+          <p class="text-gray-600 text-sm">A: ${f.a}</p>
+        </div>
+      `).join('')
+
+      resultEl.innerHTML = `
+        <div class="text-center mb-8">
+          <div class="text-5xl mb-4">${result.icon ?? '🎉'}</div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3">${result.title}</h2>
+          <p class="text-gray-600">${result.description}</p>
+        </div>
+        ${offersHtml ? `<div class="mb-8"><h3 class="font-semibold text-gray-900 mb-3">おすすめサービス</h3><div class="space-y-3">${offersHtml}</div></div>` : ''}
+        ${faqHtml ? `<div><h3 class="font-semibold text-gray-900 mb-3">よくある質問</h3><div class="space-y-4">${faqHtml}</div></div>` : ''}
+        <div class="mt-8 p-4 bg-gray-50 rounded-lg text-xs text-gray-400 text-center">
+          ※ 上記は広告リンクを含みます（PR）。ご自身でサービスの詳細をご確認のうえ、お申し込みください。
+        </div>
+        <div class="text-center mt-6">
+          <button onclick="location.reload()" class="px-6 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">もう一度診断する</button>
+        </div>
+      `
+      resultEl.classList.remove('hidden')
+    }
+  </script>
+</BaseLayout>

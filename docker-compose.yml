@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: affibase
+      POSTGRES_USER: affibase
+      POSTGRES_PASSWORD: affibase_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U affibase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://affibase:affibase_secret@postgres:5432/affibase
+      REDIS_URL: redis://redis:6379
+      PORT: 3001
+      NODE_ENV: development
+      CI: "true"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: pnpm dev
+
+  platform:
+    build:
+      context: ./apps/platform
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      API_URL: http://api:3001
+      NODE_ENV: development
+      CI: "true"
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./apps/platform:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    command: pnpm dev
+
+  member-site:
+    build:
+      context: ./apps/member-site
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:3001
+      PUBLIC_API_URL: http://localhost:3001
+      SITE_URL: http://localhost:4321
+      SITE_SLUG: demo
+      SITE_NAME: 副業診断サイト（デモ）
+      THEME_GENRE: 副業
+      THEME_SLUG: fukugyou-shindan
+      OPERATOR_NAME: 運営者
+      CI: "true"
+    ports:
+      - "4321:4321"
+    volumes:
+      - ./apps/member-site:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    command: pnpm dev
+
+volumes:
+  postgres_data:
