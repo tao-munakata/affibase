@@ -34,9 +34,14 @@ export default function RegisterPage() {
         data
       )
       login(token, user)
-      router.push('/themes')
+      router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登録に失敗しました')
+      const msg = err instanceof Error ? err.message : ''
+      if (msg === 'Email already registered') {
+        setError('このメールアドレスはすでに登録されています')
+      } else {
+        setError('登録に失敗しました')
+      }
     }
   }
 
@@ -48,7 +53,7 @@ export default function RegisterPage() {
           <p className="text-gray-500 mt-1 text-sm">無料で始める</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
             <label className="label">お名前（ニックネーム可）</label>
             <input type="text" {...register('name')} className="input" placeholder="山田 太郎" />

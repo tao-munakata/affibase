@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -18,8 +18,12 @@ type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, user, isLoading } = useAuth()
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isLoading && user) router.replace('/dashboard')
+  }, [user, isLoading, router])
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -34,8 +38,8 @@ export default function LoginPage() {
       )
       login(token, user)
       router.push('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました')
+    } catch {
+      setError('ログインに失敗しました')
     }
   }
 
@@ -47,7 +51,7 @@ export default function LoginPage() {
           <p className="text-gray-500 mt-1 text-sm">ログイン</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
             <label className="label">メールアドレス</label>
             <input

@@ -1,7 +1,7 @@
 {
   "name": "affibase",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.2",
   "scripts": {
     "dev": "docker compose up --build",
     "dev:platform": "pnpm --filter platform dev",
@@ -13,6 +13,8 @@
     "db:seed": "docker compose exec postgres psql -U affibase -d affibase -f /migrations/002_seed.sql"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "playwright": "^1.60.0",
     "typescript": "^5.4.5"
   },
   "engines": {
