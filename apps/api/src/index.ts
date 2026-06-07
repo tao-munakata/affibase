@@ -19,6 +19,7 @@ app.use('*', prettyJSON())
 app.use('*', cors({
   origin: [
     'http://localhost:3000',
+    'http://localhost:3100',
     'http://platform:3000',
     ...(process.env.ALLOWED_ORIGINS?.split(',') ?? []),
   ],
