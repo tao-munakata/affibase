@@ -4,6 +4,14 @@
       "command": "/Users/tao/.local/bin/npx",
       "args": ["@playwright/mcp@latest", "--browser", "chromium"],
       "env": {}
+    },
+    "affibase": {
+      "command": "/Users/tao/ai/affibase/apps/mcp-server/node_modules/.bin/tsx",
+      "args": ["/Users/tao/ai/affibase/apps/mcp-server/src/index.ts"],
+      "env": {
+        "AFFIBASE_API_URL": "http://localhost:3001",
+        "AFFIBASE_TOKEN": ""
+      }
     }
   }
 }
