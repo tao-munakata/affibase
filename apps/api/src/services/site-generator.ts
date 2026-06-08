@@ -1,4 +1,5 @@
 import { sql } from '../db/client'
+// sql.json() wraps JS objects for JSONB columns (postgres driver requirement)
 import { generateArticle, generateLlmsTxt } from './ai'
 
 const ARTICLE_KEYWORDS: Record<string, string[]> = {
@@ -89,8 +90,8 @@ export async function initializeSite(jobId: string, siteId: string, themeId: str
           ${a.metaDescription},
           ${batch[i]},
           '始め方系',
-          ${a.faqData},
-          ${a.jsonLd},
+          ${sql.json(a.faqData)},
+          ${sql.json(a.jsonLd as Parameters<typeof sql.json>[0])},
           'draft'
         )
         ON CONFLICT (site_id, slug) DO NOTHING
@@ -127,13 +128,13 @@ export async function initializeSite(jobId: string, siteId: string, themeId: str
 
     await sql`
       UPDATE sites
-      SET status = 'active', aeo_config = ${aeoConfig}, published_at = NOW()
+      SET status = 'active', aeo_config = ${sql.json(aeoConfig)}, published_at = NOW()
       WHERE id = ${siteId}
     `
 
     await sql`
       UPDATE generation_jobs
-      SET status = 'done', finished_at = NOW(), result = ${JSON.stringify({ articles_generated: batch.length })}
+      SET status = 'done', finished_at = NOW(), result = ${sql.json({ articles_generated: batch.length })}
       WHERE id = ${jobId}
     `
   } catch (err) {
