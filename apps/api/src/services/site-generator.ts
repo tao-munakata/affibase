@@ -71,13 +71,13 @@ export async function initializeSite(jobId: string, siteId: string, themeId: str
 
     for (let i = 0; i < batch.length; i++) {
       const result = articles[i]
-      if (result.status !== 'fulfilled') continue
+      if (result.status !== 'fulfilled') {
+        console.error(`[site-generator] article ${i + 1} failed:`, result.reason)
+        continue
+      }
 
       const a = result.value
-      const slug = batch[i]
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]/g, '')
+      const slug = `article-${String(i + 1).padStart(3, '0')}`
 
       await sql`
         INSERT INTO articles (site_id, title, slug, content, meta_description, focus_keyword, category, faq_data, json_ld, status)
@@ -89,8 +89,8 @@ export async function initializeSite(jobId: string, siteId: string, themeId: str
           ${a.metaDescription},
           ${batch[i]},
           '始め方系',
-          ${JSON.stringify(a.faqData)},
-          ${JSON.stringify(a.jsonLd)},
+          ${a.faqData},
+          ${a.jsonLd},
           'draft'
         )
         ON CONFLICT (site_id, slug) DO NOTHING
@@ -120,14 +120,14 @@ export async function initializeSite(jobId: string, siteId: string, themeId: str
         'User-agent: PerplexityBot',
         'Allow: /',
         '',
-        `Sitemap: https://${site.subdomain}.affibase.jp/sitemap.xml`,
+        `Sitemap: https://${site.subdomain}.affihub.jp/sitemap.xml`,
       ].join('\n'),
       generated_at: new Date().toISOString(),
     }
 
     await sql`
       UPDATE sites
-      SET status = 'active', aeo_config = ${JSON.stringify(aeoConfig)}, published_at = NOW()
+      SET status = 'active', aeo_config = ${aeoConfig}, published_at = NOW()
       WHERE id = ${siteId}
     `
 

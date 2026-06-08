@@ -74,12 +74,12 @@ export default function SitesPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <StatusIcon status={site.status} />
                   <a
-                    href={`https://${site.subdomain}.affibase.jp`}
+                    href={`https://${site.subdomain}.affihub.jp`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-gray-900 hover:text-brand-600 flex items-center gap-1"
                   >
-                    {site.subdomain}.affibase.jp
+                    {site.subdomain}.affihub.jp
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>

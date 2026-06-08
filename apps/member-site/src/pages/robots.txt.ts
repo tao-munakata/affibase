@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 
 export const GET: APIRoute = async () => {
-  const siteUrl = import.meta.env.SITE_URL ?? 'https://demo.affibase.jp'
+  const siteUrl = import.meta.env.SITE_URL ?? 'https://demo.affihub.jp'
   const content = [
     'User-agent: *',
     'Allow: /',

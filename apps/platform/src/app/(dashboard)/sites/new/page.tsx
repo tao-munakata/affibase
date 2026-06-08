@@ -66,7 +66,7 @@ function NewSiteForm() {
               className="input flex-1"
               placeholder="my-affiliate-site"
             />
-            <span className="text-sm text-gray-500 whitespace-nowrap">.affibase.jp</span>
+            <span className="text-sm text-gray-500 whitespace-nowrap">.affihub.jp</span>
           </div>
           {errors.subdomain && <p className="text-red-500 text-xs mt-1">{errors.subdomain.message}</p>}
         </div>

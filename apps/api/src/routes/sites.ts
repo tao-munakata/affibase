@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { sql } from '../db/client'
 import { requireAuth, type AuthVariables } from '../middleware/auth'
+import { initializeSite } from '../services/site-generator'
 
 const app = new Hono<{ Variables: AuthVariables }>()
 app.use('*', requireAuth)
@@ -46,11 +47,19 @@ app.post('/', zValidator('json', createSiteSchema), async (c) => {
     RETURNING *
   `
 
-  // Queue generation job
-  await sql`
+  const [job] = await sql`
     INSERT INTO generation_jobs (site_id, type, payload)
     VALUES (${site.id}, 'site_init', ${JSON.stringify({ theme_id: body.theme_id })})
+    RETURNING *
   `
+
+  setImmediate(async () => {
+    try {
+      await initializeSite(job.id, site.id, body.theme_id)
+    } catch (err) {
+      console.error('[sites] init failed:', err)
+    }
+  })
 
   return c.json({ site }, 201)
 })

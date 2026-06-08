@@ -18,7 +18,13 @@ app.post('/site/:siteId', async (c) => {
     WHERE s.id = ${siteId} AND s.user_id = ${userId}
   `
   if (!site) return c.json({ error: 'Site not found' }, 404)
-  if (site.status === 'generating') return c.json({ error: 'Already generating' }, 409)
+
+  const [runningJob] = await sql`
+    SELECT id FROM generation_jobs
+    WHERE site_id = ${siteId} AND status IN ('queued', 'running')
+    ORDER BY created_at DESC LIMIT 1
+  `
+  if (runningJob) return c.json({ error: 'Already generating' }, 409)
 
   const [job] = await sql`
     INSERT INTO generation_jobs (site_id, type, payload)

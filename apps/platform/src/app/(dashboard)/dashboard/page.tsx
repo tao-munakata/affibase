@@ -121,7 +121,7 @@ export default function DashboardPage() {
               {sites.map((site) => (
                 <div key={site.id} className="flex items-center justify-between py-2">
                   <div>
-                    <p className="text-sm font-medium">{site.subdomain}.affibase.jp</p>
+                    <p className="text-sm font-medium">{site.subdomain}.affihub.jp</p>
                   </div>
                   <span className={`badge ${site.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                     {site.status}

@@ -67,7 +67,7 @@ ${input.operatorBio ? `運営者プロフィール: ${input.operatorBio}` : ''}$
 
   const message = await ai.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [{ role: 'user', content: prompt }],
   })
 
@@ -124,7 +124,7 @@ export async function generateLlmsTxt(site: {
   genre: string
   operatorName: string
 }): Promise<string> {
-  return `# AffiBase Site: ${site.subdomain}.affibase.jp
+  return `# AffiBase Site: ${site.subdomain}.affihub.jp
 
 ## サイト概要
 > ${site.themeDescription}（運営: ${site.operatorName}）
