@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Globe, Palette, BarChart3, Briefcase, LogOut, Zap } from 'lucide-react'
+import { LayoutDashboard, Globe, Palette, BarChart3, Briefcase, LogOut, Zap, CreditCard } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { clsx } from 'clsx'
 
@@ -12,6 +12,7 @@ const nav = [
   { href: '/sites',     icon: Globe,           label: 'マイサイト' },
   { href: '/offers',    icon: Briefcase,       label: '案件管理' },
   { href: '/reports',   icon: BarChart3,       label: '収益レポート' },
+  { href: '/billing',   icon: CreditCard,      label: 'プラン・請求' },
 ]
 
 export function Sidebar() {

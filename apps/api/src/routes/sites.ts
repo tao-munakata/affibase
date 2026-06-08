@@ -38,6 +38,14 @@ app.post('/', zValidator('json', createSiteSchema), async (c) => {
   const [theme] = await sql`SELECT id FROM themes WHERE id = ${body.theme_id} AND is_active = true`
   if (!theme) return c.json({ error: 'Theme not found' }, 404)
 
+  // Free plan: max 1 site
+  if (c.get('userPlan') === 'free') {
+    const [{ count }] = await sql`SELECT COUNT(*) as count FROM sites WHERE user_id = ${userId}`
+    if (Number(count) >= 1) {
+      return c.json({ error: 'FREE_PLAN_LIMIT', message: '無料プランはサイト1件まで。Proプランにアップグレードしてください。' }, 403)
+    }
+  }
+
   const [existing] = await sql`SELECT id FROM sites WHERE subdomain = ${body.subdomain}`
   if (existing) return c.json({ error: 'Subdomain already taken' }, 409)
 

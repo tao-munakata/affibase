@@ -12,6 +12,7 @@ import diagnosisRoutes from './routes/diagnosis'
 import reportsRoutes from './routes/reports'
 import generateRoutes from './routes/generate'
 import aspRoutes from './routes/asp'
+import billingRoutes from './routes/billing'
 
 const app = new Hono()
 
@@ -37,6 +38,7 @@ app.route('/api/v1/diagnosis', diagnosisRoutes)
 app.route('/api/v1/reports',   reportsRoutes)
 app.route('/api/v1/generate',  generateRoutes)
 app.route('/api/v1/asp',       aspRoutes)
+app.route('/api/v1/billing',   billingRoutes)
 
 // OpenAPI spec endpoint (stub — expand later)
 app.get('/api/v1/openapi.json', (c) => c.json({
