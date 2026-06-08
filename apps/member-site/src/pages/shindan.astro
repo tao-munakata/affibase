@@ -1,25 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+import { extractSlug, fetchSiteConfig } from '../lib/siteConfig'
 
-const SITE_NAME = import.meta.env.SITE_NAME ?? '副業診断サイト'
-const THEME_GENRE = import.meta.env.THEME_GENRE ?? '副業'
-const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001'
-const THEME_SLUG = import.meta.env.THEME_SLUG ?? 'fukugyou-shindan'
+const baseDomain = import.meta.env.BASE_DOMAIN ?? 'affihub.jp'
+const apiUrl = import.meta.env.API_URL ?? 'http://localhost:3001'
+const publicApiUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001'
+const devSlug = import.meta.env.SITE_SLUG
+
+const slug = extractSlug(Astro.request.headers.get('host'), baseDomain, devSlug)
+const cfg = await fetchSiteConfig(slug, apiUrl, baseDomain)
 
 const jsonLd = [{
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   'mainEntity': [
-    { '@type': 'Question', 'name': `${THEME_GENRE}は初心者でもできますか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': `はい。${THEME_GENRE}は未経験からでも始められるサービスが多数あります。まずはこの診断でご自身に合ったサービスを見つけてみましょう。` } },
-    { '@type': 'Question', 'name': `${THEME_GENRE}の月収目安はいくらですか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': '初心者の場合、月1〜5万円が現実的な目標です。スキルや時間によって異なりますが、継続することで収入は伸びていきます。' } },
+    { '@type': 'Question', 'name': `${cfg.genre}は初心者でもできますか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': `はい。${cfg.genre}は未経験からでも始められるサービスが多数あります。まずはこの診断でご自身に合ったサービスを見つけてみましょう。` } },
+    { '@type': 'Question', 'name': `${cfg.genre}の月収目安はいくらですか？`, 'acceptedAnswer': { '@type': 'Answer', 'text': '初心者の場合、月1〜5万円が現実的な目標です。スキルや時間によって異なりますが、継続することで収入は伸びていきます。' } },
   ],
 }]
 ---
 
 <BaseLayout
-  title={`${THEME_GENRE}診断 | ${SITE_NAME}`}
-  description={`あなたに最適な${THEME_GENRE}をAIが診断。6つの質問に答えるだけで、スキルや時間に合ったサービスを提案します。`}
+  title={`${cfg.genre}診断 | ${cfg.siteName}`}
+  description={`あなたに最適な${cfg.genre}をAIが診断。6つの質問に答えるだけで、スキルや時間に合ったサービスを提案します。`}
   jsonLd={jsonLd}
+  siteUrl={cfg.siteUrl}
 >
   <header class="border-b border-gray-100 bg-white">
     <div class="max-w-3xl mx-auto px-4 py-4">
@@ -28,8 +33,8 @@ const jsonLd = [{
   </header>
 
   <main class="max-w-2xl mx-auto px-4 py-10" id="app">
-    <h1 class="text-2xl font-bold text-gray-900 mb-2">{THEME_GENRE}診断</h1>
-    <p class="text-gray-500 mb-8">6つの質問に答えて、あなたに最適な{THEME_GENRE}を見つけましょう</p>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">{cfg.genre}診断</h1>
+    <p class="text-gray-500 mb-8">6つの質問に答えて、あなたに最適な{cfg.genre}を見つけましょう</p>
 
     <!-- Step indicator -->
     <div id="stepIndicator" class="flex gap-2 mb-8">
@@ -68,7 +73,7 @@ const jsonLd = [{
 
       <!-- Step 3 -->
       <div class="step-panel hidden" data-step="3">
-        <p class="font-medium text-gray-900 mb-4">Q3. {THEME_GENRE}を始める理由は？（複数選択可）</p>
+        <p class="font-medium text-gray-900 mb-4">Q3. {cfg.genre}を始める理由は？（複数選択可）</p>
         <div class="space-y-2" data-field="reason">
           {[['income','収入を増やしたい'],['skill','スキルを活かしたい'],['freedom','時間・場所を自由にしたい'],['independence','独立・起業を目指している'],['saving','老後・貯蓄のため'],['try','まずは試してみたい']].map(([v,l]) => (
             <label class="choice-btn choice-check">
@@ -141,7 +146,7 @@ const jsonLd = [{
     .hidden { display: none; }
   </style>
 
-  <script define:vars={{ API_URL, THEME_SLUG }}>
+  <script define:vars={{ API_URL: publicApiUrl, THEME_SLUG: cfg.themeSlug }}>
     const totalSteps = 6
     let currentStep = 1
     const answers = { age: '', job: '', reason: [], time: '', skills: [], goal: '' }
@@ -187,7 +192,6 @@ const jsonLd = [{
       answers[fields[currentStep - 1]] = val
 
       if (currentStep === totalSteps) {
-        // Submit diagnosis
         nextBtn.disabled = true
         nextBtn.textContent = '診断中...'
         try {

@@ -1,36 +1,37 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+import { extractSlug, fetchSiteConfig } from '../lib/siteConfig'
 
-const API_URL = import.meta.env.API_URL ?? 'http://localhost:3001'
-const SITE_SLUG = import.meta.env.SITE_SLUG ?? 'demo'
-const SITE_NAME = import.meta.env.SITE_NAME ?? '副業診断サイト'
-const SITE_DESCRIPTION = import.meta.env.SITE_DESCRIPTION ?? 'あなたに最適な副業をAIが診断します'
-const OPERATOR_NAME = import.meta.env.OPERATOR_NAME ?? '運営者'
-const THEME_GENRE = import.meta.env.THEME_GENRE ?? '副業'
+const baseDomain = import.meta.env.BASE_DOMAIN ?? 'affihub.jp'
+const apiUrl = import.meta.env.API_URL ?? 'http://localhost:3001'
+const devSlug = import.meta.env.SITE_SLUG
 
-// Fetch recommended offers for the homepage
+const slug = extractSlug(Astro.request.headers.get('host'), baseDomain, devSlug)
+const cfg = await fetchSiteConfig(slug, apiUrl, baseDomain)
+
+// Fetch recommended offers
 let offers: Array<{id: string; name: string; description: string; commission: number; genre: string}> = []
 try {
-  const res = await fetch(`${API_URL}/api/v1/offers?genre=${encodeURIComponent(THEME_GENRE)}`)
+  const res = await fetch(`${apiUrl}/api/v1/offers?genre=${encodeURIComponent(cfg.genre)}`)
   if (res.ok) {
     const data = await res.json()
     offers = data.offers?.slice(0, 3) ?? []
   }
-} catch { /* silently fail in SSG */ }
+} catch { /* silently fail */ }
 
 const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': SITE_NAME,
-    'description': SITE_DESCRIPTION,
-    'url': import.meta.env.SITE_URL ?? `https://${SITE_SLUG}.affibase.jp`,
-    'author': {'@type': 'Person', 'name': OPERATOR_NAME},
+    'name': cfg.siteName,
+    'description': cfg.siteDescription,
+    'url': cfg.siteUrl,
+    'author': {'@type': 'Person', 'name': cfg.operatorName},
   },
   {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    'name': `${SITE_NAME} 診断ツール`,
+    'name': `${cfg.siteName} 診断ツール`,
     'applicationCategory': 'LifestyleApplication',
     'operatingSystem': 'Web',
     'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'JPY'},
@@ -38,11 +39,11 @@ const jsonLd = [
 ]
 ---
 
-<BaseLayout title={`${SITE_NAME} | ${SITE_DESCRIPTION}`} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
+<BaseLayout title={`${cfg.siteName} | ${cfg.siteDescription}`} description={cfg.siteDescription} jsonLd={jsonLd} siteUrl={cfg.siteUrl}>
   <!-- Header -->
   <header class="border-b border-gray-100 bg-white sticky top-0 z-10">
     <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <span class="font-bold text-lg text-sky-700">{SITE_NAME}</span>
+      <span class="font-bold text-lg text-sky-700">{cfg.siteName}</span>
       <a href="/articles" class="text-sm text-gray-500 hover:text-gray-700">記事一覧</a>
     </div>
   </header>
@@ -51,10 +52,10 @@ const jsonLd = [
   <section class="bg-gradient-to-br from-sky-50 to-sky-100 py-16 px-4">
     <div class="max-w-3xl mx-auto text-center">
       <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-        あなたに最適な{THEME_GENRE}を<br />AIが無料で診断します
+        あなたに最適な{cfg.genre}を<br />AIが無料で診断します
       </h1>
       <p class="text-gray-600 mb-8 text-lg">
-        6つの質問に答えるだけで、あなたの状況に合った{THEME_GENRE}サービスをご提案します
+        6つの質問に答えるだけで、あなたの状況に合った{cfg.genre}サービスをご提案します
       </p>
       <a
         href="/shindan"
@@ -90,7 +91,7 @@ const jsonLd = [
   {offers.length > 0 && (
     <section class="py-12 px-4 bg-gray-50">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">おすすめ{THEME_GENRE}サービス TOP3</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-6">おすすめ{cfg.genre}サービス TOP3</h2>
         <div class="space-y-4">
           {offers.map((offer, i) => (
             <div class="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
@@ -125,7 +126,7 @@ const jsonLd = [
     <div class="max-w-4xl mx-auto">
       <p class="text-xs text-gray-400 text-center">
         ※ 本サイトはアフィリエイトプログラムを利用しています。記事内のリンクから商品・サービスに申し込みいただいた場合、当サイトに報酬が発生することがあります。<br />
-        運営: {OPERATOR_NAME} | Powered by AffiBase
+        運営: {cfg.operatorName} | Powered by AffiBase
       </p>
     </div>
   </footer>

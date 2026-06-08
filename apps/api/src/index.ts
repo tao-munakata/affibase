@@ -13,18 +13,27 @@ import reportsRoutes from './routes/reports'
 import generateRoutes from './routes/generate'
 import aspRoutes from './routes/asp'
 import billingRoutes from './routes/billing'
+import publicRoutes from './routes/public'
 
 const app = new Hono()
 
 app.use('*', logger())
 app.use('*', prettyJSON())
 app.use('*', cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3100',
-    'http://platform:3000',
-    ...(process.env.ALLOWED_ORIGINS?.split(',') ?? []),
-  ],
+  origin: (origin) => {
+    if (!origin) return null
+    const allowed = [
+      'http://localhost:3000',
+      'http://localhost:3100',
+      'http://localhost:4321',
+      'http://platform:3000',
+      ...(process.env.ALLOWED_ORIGINS?.split(',') ?? []),
+    ]
+    const baseDomain = process.env.BASE_DOMAIN ?? 'affihub.jp'
+    if (allowed.includes(origin)) return origin
+    if (origin.endsWith(`.${baseDomain}`) || origin === `https://${baseDomain}`) return origin
+    return null
+  },
   credentials: true,
 }))
 
@@ -39,6 +48,7 @@ app.route('/api/v1/reports',   reportsRoutes)
 app.route('/api/v1/generate',  generateRoutes)
 app.route('/api/v1/asp',       aspRoutes)
 app.route('/api/v1/billing',   billingRoutes)
+app.route('/api/v1/public',    publicRoutes)
 
 // OpenAPI 3.0 spec — AI エージェント・MCP クライアント向け
 app.get('/api/v1/openapi.json', (c) => c.json({

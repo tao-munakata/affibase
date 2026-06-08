@@ -1,0 +1,26 @@
+# AffiBase Production Reverse Proxy
+# BASE_DOMAIN は docker-compose.prod.yml の environment から注入される
+
+{BASE_DOMAIN} www.{BASE_DOMAIN} {
+    reverse_proxy platform:3000
+    encode gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+    }
+}
+
+api.{BASE_DOMAIN} {
+    reverse_proxy api:3001
+    encode gzip
+}
+
+*.{BASE_DOMAIN} {
+    reverse_proxy member-site:4321
+    encode gzip
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+    }
+}

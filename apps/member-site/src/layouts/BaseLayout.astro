@@ -2,14 +2,15 @@
 export interface Props {
   title: string
   description: string
+  siteUrl?: string
   canonicalUrl?: string
   jsonLd?: object[]
   ogImage?: string
 }
 
-const { title, description, canonicalUrl, jsonLd = [], ogImage } = Astro.props
-const siteUrl = import.meta.env.SITE_URL ?? 'https://demo.affibase.jp'
-const canonical = canonicalUrl ?? new URL(Astro.url.pathname, siteUrl).href
+const { title, description, siteUrl, canonicalUrl, jsonLd = [], ogImage } = Astro.props
+const resolvedSiteUrl = siteUrl ?? import.meta.env.SITE_URL ?? 'https://demo.affihub.jp'
+const canonical = canonicalUrl ?? new URL(Astro.url.pathname, resolvedSiteUrl).href
 ---
 
 <!doctype html>

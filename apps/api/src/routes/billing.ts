@@ -115,18 +115,50 @@ app.post('/webhook', async (c) => {
       }
       break
     }
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as { customer: string; status: string; current_period_end: number }
+      const expiresAt = new Date(sub.current_period_end * 1000).toISOString()
+      if (sub.status === 'active') {
+        await sql`
+          UPDATE users SET plan = 'pro', plan_expires_at = ${expiresAt}
+          WHERE stripe_customer_id = ${sub.customer}
+        `
+        console.log(`[billing] subscription active for customer ${sub.customer}, expires ${expiresAt}`)
+      } else if (['past_due', 'unpaid', 'canceled'].includes(sub.status)) {
+        await sql`
+          UPDATE users SET plan = 'free', stripe_subscription_id = NULL, plan_expires_at = NULL
+          WHERE stripe_customer_id = ${sub.customer}
+        `
+        console.log(`[billing] subscription ${sub.status} — downgraded customer ${sub.customer}`)
+      }
+      break
+    }
     case 'customer.subscription.deleted': {
       const sub = event.data.object as { customer: string }
       await sql`
-        UPDATE users SET plan = 'free', stripe_subscription_id = NULL
+        UPDATE users SET plan = 'free', stripe_subscription_id = NULL, plan_expires_at = NULL
         WHERE stripe_customer_id = ${sub.customer}
       `
       console.log(`[billing] subscription deleted for customer ${sub.customer}`)
       break
     }
+    case 'invoice.payment_succeeded': {
+      const inv = event.data.object as { customer: string; lines: { data: Array<{ period: { end: number } }> } }
+      const periodEnd = inv.lines?.data?.[0]?.period?.end
+      if (periodEnd) {
+        const expiresAt = new Date(periodEnd * 1000).toISOString()
+        await sql`
+          UPDATE users SET plan = 'pro', plan_expires_at = ${expiresAt}
+          WHERE stripe_customer_id = ${inv.customer}
+        `
+        console.log(`[billing] payment succeeded for customer ${inv.customer}, renewed to ${expiresAt}`)
+      }
+      break
+    }
     case 'invoice.payment_failed': {
-      const inv = event.data.object as { customer: string }
-      console.warn(`[billing] payment failed for customer ${inv.customer}`)
+      const inv = event.data.object as { customer: string; attempt_count: number }
+      console.warn(`[billing] payment failed (attempt ${inv.attempt_count}) for customer ${inv.customer}`)
+      // Stripe は自動リトライするため、subscription.updated/deleted で最終的なダウングレードを処理
       break
     }
   }

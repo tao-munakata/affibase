@@ -1,0 +1,99 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: affibase
+      POSTGRES_USER: affibase
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U affibase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: production
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://affibase:${POSTGRES_PASSWORD}@postgres:5432/affibase
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      PORT: 3001
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  platform:
+    build:
+      context: ./apps/platform
+      dockerfile: Dockerfile
+      target: production
+    restart: always
+    env_file: .env
+    environment:
+      API_URL: http://api:3001
+      NODE_ENV: production
+    depends_on:
+      - api
+
+  member-site:
+    build:
+      context: ./apps/member-site
+      dockerfile: Dockerfile
+      target: production
+    restart: always
+    env_file: .env
+    environment:
+      API_URL: http://api:3001
+      PUBLIC_API_URL: https://api.${BASE_DOMAIN}
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      HOST: 0.0.0.0
+      PORT: 4321
+      NODE_ENV: production
+    depends_on:
+      - api
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      BASE_DOMAIN: ${BASE_DOMAIN}
+    depends_on:
+      - platform
+      - api
+      - member-site
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
